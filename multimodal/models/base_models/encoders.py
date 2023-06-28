@@ -28,7 +28,8 @@ class ProprioEncoder(nn.Module):
             init_weights(self.modules())
 
     def forward(self, proprio, z_depth):
-        return self.proprio_encoder(proprio).unsqueeze(z_depth)
+        # return self.proprio_encoder(proprio).unsqueeze(z_depth)
+        return self.proprio_encoder(proprio).unsqueeze(2)
 
 
 class ForceEncoder(nn.Module):
@@ -106,7 +107,9 @@ class ImageEncoder(nn.Module):
 
         # image embedding parameters
         flattened = self.flatten(out_img_conv6)
-        img_out = self.img_encoder(flattened).unsqueeze(self.z_depth)
+        print("SHAPE OF FLATTENED TENSOR: " + str(flattened.shape)) #########
+        # img_out = self.img_encoder(flattened).unsqueeze(self.z_depth)
+        img_out = self.img_encoder(flattened).unsqueeze(2)
 
         return img_out, img_out_convs
 
@@ -126,9 +129,11 @@ class DepthEncoder(nn.Module):
         self.depth_conv3 = conv2d(64, 64, kernel_size=4, stride=2)
         self.depth_conv4 = conv2d(64, 64, stride=2)
         self.depth_conv5 = conv2d(64, 128, stride=2)
-        self.depth_conv6 = conv2d(128, self.z_dim, stride=2)
+        self.depth_conv6 = conv2d(128, z_dim, stride=2)
+        self.depth_conv7 = conv2d(z_dim, z_depth * z_dim, stride=2)
 
-        self.depth_encoder = nn.Linear(4 * self.z_dim, 2 * self.z_dim)
+        # self.depth_encoder = nn.Linear(4 * z_dim, 2 * z_dim) #########
+        self.depth_encoder = nn.Linear(z_depth * z_dim, z_depth * z_dim)
         self.flatten = Flatten()
 
         if initailize_weights:
@@ -142,6 +147,7 @@ class DepthEncoder(nn.Module):
         out_depth_conv4 = self.depth_conv4(out_depth_conv3)
         out_depth_conv5 = self.depth_conv5(out_depth_conv4)
         out_depth_conv6 = self.depth_conv6(out_depth_conv5)
+        out_depth_conv7 = self.depth_conv7(out_depth_conv6)
 
         depth_out_convs = (
             out_depth_conv1,
@@ -150,10 +156,13 @@ class DepthEncoder(nn.Module):
             out_depth_conv4,
             out_depth_conv5,
             out_depth_conv6,
+            out_depth_conv7
         )
 
         # depth embedding parameters
-        flattened = self.flatten(out_depth_conv6)
-        depth_out = self.depth_encoder(flattened).unsqueeze(z_depth)
+        flattened = self.flatten(out_depth_conv7)
+        print("SHAPE OF FLATTENED TENSOR 2: " + str(flattened.shape)) #########
+        # depth_out = self.depth_encoder(flattened).unsqueeze(z_depth)
+        depth_out = self.depth_encoder(flattened).unsqueeze(2)
 
         return depth_out, depth_out_convs

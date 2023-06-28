@@ -114,9 +114,9 @@ class SensorFusion(nn.Module):
 
         # Get encoded outputs
         img_out, img_out_convs = self.img_encoder(image, z_depth)
-        depth_out, depth_out_convs = self.depth_encoder(depth)
+        depth_out, depth_out_convs = self.depth_encoder(depth, z_depth) ###
         frc_out = self.frc_encoder(frc_in)
-        proprio_out = self.proprio_encoder(proprio_in)
+        proprio_out = self.proprio_encoder(proprio_in, z_depth) ###
 
         if self.deterministic:
             # multimodal embedding
@@ -139,8 +139,15 @@ class SensorFusion(nn.Module):
             mu_z_depth, var_z_depth = gaussian_parameters(depth_out, dim=1)
 
             # Tile distribution parameters using concatonation
+
+            print("SHAPE OF mu_z_img: " + str(mu_z_img.shape)) #########
+            print("SHAPE OF mu_z_frc: " + str(mu_z_frc.shape)) #########
+            print("SHAPE OF mu_z_proprio: " + str(mu_z_proprio.shape)) #########
+            print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape)) #########
+            print("SHAPE OF mu_prior_resized: " + str(mu_prior_resized.shape)) #########
+
             m_vect = torch.cat(
-                [mu_z_img, mu_z_frc, mu_z_proprio, mu_z_depth, mu_prior_resized], dim=2
+                [mu_z_img, mu_z_frc, mu_z_proprio, mu_z_depth, mu_prior_resized], dim=2 ### mu_z_proprio
             )
             var_vect = torch.cat(
                 [var_z_img, var_z_frc, var_z_proprio, var_z_depth, var_prior_resized],
