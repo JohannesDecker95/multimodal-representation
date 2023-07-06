@@ -54,6 +54,8 @@ class selfsupervised:
             action_dim=configs["action_dim"],
         ).to(self.device)
 
+        print("selfsupervised z_depth: " + str(configs["zdepth"]))
+
         self.optimizer = optim.Adam(
             self.model.parameters(),
             lr=self.configs["lr"],

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from models.models_utils import (
     duplicate,
+    upscale_tensor,
     gaussian_parameters,
     rescaleImage,
     product_of_experts,
@@ -43,12 +44,15 @@ class SensorFusion(nn.Module):
         self.device = device
         self.deterministic = deterministic
 
+        print("SensorFusion z_dim: " + str(z_dim))
+        print("SensorFusion z_depth: " + str(z_depth))
+
         # zero centered, 1 std normal distribution
         self.z_prior_m = torch.nn.Parameter(
-            torch.zeros(1, self.z_dim), requires_grad=False
+            torch.zeros(1, z_dim), requires_grad=False
         )
         self.z_prior_v = torch.nn.Parameter(
-            torch.ones(1, self.z_dim), requires_grad=False
+            torch.ones(1, z_dim), requires_grad=False
         )
         self.z_prior = (self.z_prior_m, self.z_prior_v)
 
@@ -108,6 +112,7 @@ class SensorFusion(nn.Module):
 
         # batch size
         batch_dim = vis_in.size()[0]
+        print("batch_dim: " + str(batch_dim))
 
         image = rescaleImage(vis_in)
         depth = filter_depth(depth_in)
@@ -128,9 +133,24 @@ class SensorFusion(nn.Module):
             # Encoder priors
             mu_prior, var_prior = self.z_prior
 
+            print("z_depth: " + str(z_depth))
+            print("mu_prior: " + str(mu_prior)) ##############
+
             # Duplicate prior parameters for each data point in the batch
             mu_prior_resized = duplicate(mu_prior, batch_dim).unsqueeze(2)
             var_prior_resized = duplicate(var_prior, batch_dim).unsqueeze(2)
+            # mu_prior_resized = upscale_tensor(duplicate(mu_prior, batch_dim), z_depth).unsqueeze(2)
+            # var_prior_resized = upscale_tensor(duplicate(var_prior, batch_dim), z_depth).unsqueeze(2)
+
+            print("mu_prior_resized: " + str(mu_prior_resized.shape))
+            print("var_prior_resized: " + str(var_prior_resized.shape))
+
+            # # RESHAPE TENSORS
+            # mu_prior_resized = upscale_tensor(mu_prior_resized, z_depth)
+            # var_prior_resized = upscale_tensor(var_prior_resized, z_depth)
+
+            print("mu_prior_resized: " + str(mu_prior_resized.shape))
+            print("var_prior_resized: " + str(var_prior_resized.shape))
 
             # Modality Mean and Variances
             mu_z_img, var_z_img = gaussian_parameters(img_out, dim=1)
@@ -143,8 +163,8 @@ class SensorFusion(nn.Module):
             print("SHAPE OF mu_z_img: " + str(mu_z_img.shape)) #########
             print("SHAPE OF mu_z_frc: " + str(mu_z_frc.shape)) #########
             print("SHAPE OF mu_z_proprio: " + str(mu_z_proprio.shape)) #########
-            print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape)) #########
-            print("SHAPE OF mu_prior_resized: " + str(mu_prior_resized.shape)) #########
+            # print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape)) #########
+            # print("SHAPE OF mu_prior_resized: " + str(mu_prior_resized.shape)) #########
 
             m_vect = torch.cat(
                 [mu_z_img, mu_z_frc, mu_z_proprio, mu_z_depth, mu_prior_resized], dim=2 ### mu_z_proprio
@@ -201,7 +221,7 @@ class SensorFusionSelfSupervised(SensorFusion):
         self, device, z_dim, z_depth, action_dim, encoder=False, deterministic=False
     ):
 
-        super().__init__(device, z_dim, action_dim, encoder, deterministic)
+        super().__init__(device, z_dim, z_depth, action_dim, encoder, deterministic)
 
         self.deterministic = deterministic
 

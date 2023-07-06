@@ -10,8 +10,8 @@ class ProprioEncoder(nn.Module):
         """
         super().__init__()
         self.z_dim = z_dim
-
         self.z_depth = z_depth
+        out = z_depth * z_dim
 
         self.proprio_encoder = nn.Sequential(
             nn.Linear(8, 32),
@@ -20,8 +20,10 @@ class ProprioEncoder(nn.Module):
             nn.LeakyReLU(0.1, inplace=True),
             nn.Linear(64, 128),
             nn.LeakyReLU(0.1, inplace=True),
-            nn.Linear(128, self.z_depth * self.z_dim),
+            nn.Linear(128, z_depth * z_dim),
             nn.LeakyReLU(0.1, inplace=True),
+            # nn.Linear(out, out),
+            # nn.LeakyReLU(0.1, inplace=True)
         )
 
         if initailize_weights:
