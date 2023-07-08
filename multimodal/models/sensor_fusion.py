@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 from models.models_utils import (
     duplicate,
-    upscale_tensor,
     gaussian_parameters,
     rescaleImage,
     product_of_experts,
@@ -77,8 +76,12 @@ class SensorFusion(nn.Module):
         # -----------------------
         # action fusion network
         # -----------------------
+        adjusted = int(self.z_dim*z_depth/2)
+        print("adjusted: " + str(adjusted))
+
         self.st_fusion_fc1 = nn.Sequential(
-            nn.Linear(32 + self.z_dim, 128), nn.LeakyReLU(0.1, inplace=True)
+            # nn.Linear(32 + self.z_dim, 128), nn.LeakyReLU(0.1, inplace=True)
+            nn.Linear(32 + adjusted, 128), nn.LeakyReLU(0.1, inplace=True)
         )
         self.st_fusion_fc2 = nn.Sequential(
             nn.Linear(128, self.z_dim), nn.LeakyReLU(0.1, inplace=True)
@@ -134,20 +137,13 @@ class SensorFusion(nn.Module):
             mu_prior, var_prior = self.z_prior
 
             print("z_depth: " + str(z_depth))
-            print("mu_prior: " + str(mu_prior)) ##############
+            print("mu_prior: " + str(mu_prior))
+            print("SIZE OF mu_prior: " + str(mu_prior.shape))
+            print("duplicate function: " + str((duplicate(mu_prior, batch_dim)).shape)) # .shape
 
             # Duplicate prior parameters for each data point in the batch
             mu_prior_resized = duplicate(mu_prior, batch_dim).unsqueeze(2)
             var_prior_resized = duplicate(var_prior, batch_dim).unsqueeze(2)
-            # mu_prior_resized = upscale_tensor(duplicate(mu_prior, batch_dim), z_depth).unsqueeze(2)
-            # var_prior_resized = upscale_tensor(duplicate(var_prior, batch_dim), z_depth).unsqueeze(2)
-
-            print("mu_prior_resized: " + str(mu_prior_resized.shape))
-            print("var_prior_resized: " + str(var_prior_resized.shape))
-
-            # # RESHAPE TENSORS
-            # mu_prior_resized = upscale_tensor(mu_prior_resized, z_depth)
-            # var_prior_resized = upscale_tensor(var_prior_resized, z_depth)
 
             print("mu_prior_resized: " + str(mu_prior_resized.shape))
             print("var_prior_resized: " + str(var_prior_resized.shape))
@@ -160,14 +156,21 @@ class SensorFusion(nn.Module):
 
             # Tile distribution parameters using concatonation
 
+            pos2 = int(self.z_dim*z_depth/2)
+            print("pos2: " + str(pos2))
+
+            mu_prior_resized = torch.zeros((batch_dim, pos2, 1), dtype=torch.float32).to(self.device) # .to('mps:0')
+            var_prior_resized = torch.zeros((batch_dim, pos2, 1), dtype=torch.float32).to(self.device) # .to('mps:0')
+
             print("SHAPE OF mu_z_img: " + str(mu_z_img.shape)) #########
             print("SHAPE OF mu_z_frc: " + str(mu_z_frc.shape)) #########
             print("SHAPE OF mu_z_proprio: " + str(mu_z_proprio.shape)) #########
-            # print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape)) #########
-            # print("SHAPE OF mu_prior_resized: " + str(mu_prior_resized.shape)) #########
+            print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape)) #########
+            print("SHAPE OF mu_prior_resized: " + str(mu_prior_resized.shape)) #########
 
             m_vect = torch.cat(
-                [mu_z_img, mu_z_frc, mu_z_proprio, mu_z_depth, mu_prior_resized], dim=2 ### mu_z_proprio
+                [mu_z_img, mu_z_frc, mu_z_proprio, mu_z_depth, mu_prior_resized],
+                dim=2 
             )
             var_vect = torch.cat(
                 [var_z_img, var_z_frc, var_z_proprio, var_z_depth, var_prior_resized],
@@ -180,6 +183,12 @@ class SensorFusion(nn.Module):
             # Sample Gaussian to get latent
             z = sample_gaussian(mu_z, var_z, self.device)
 
+        print("z: " + str(z.shape))
+        print("m_vect: " + str(m_vect.shape))
+        print("var_vect: " + str(var_vect.shape))
+        print("mu_z: " + str(mu_z.shape))
+        print("var_z: " + str(var_z.shape))
+
         if self.encoder_bool or action_in is None:
             if self.deterministic:
                 return img_out, frc_out, proprio_out, depth_out, z
@@ -190,7 +199,9 @@ class SensorFusion(nn.Module):
             act_feat = self.action_encoder(action_in)
 
             # state-action feature
+            #print("act_feat: " + str(act_feat))
             mm_act_f1 = torch.cat([z, act_feat], 1)
+            print("mm_act_f1: " + str(mm_act_f1.shape))
             mm_act_f2 = self.st_fusion_fc1(mm_act_f1)
             mm_act_feat = self.st_fusion_fc2(mm_act_f2)
 
@@ -238,7 +249,8 @@ class SensorFusionSelfSupervised(SensorFusion):
         # -----------------------
         # pairing decoder
         # -----------------------
-        self.pair_fc = nn.Sequential(nn.Linear(self.z_dim, 1))
+        adjusted = int(z_dim*z_depth/2)
+        self.pair_fc = nn.Sequential(nn.Linear(adjusted, 1))
 
         # -----------------------
         # contact decoder
@@ -332,4 +344,5 @@ class SensorFusionSelfSupervised(SensorFusion):
                 var_z,
                 mu_prior,
                 var_prior,
+                self.z_depth
             )

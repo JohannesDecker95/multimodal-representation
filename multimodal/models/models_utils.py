@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+import numpy as np
+from scipy.interpolate import interp1d
+from scipy.ndimage import zoom
 from torch.nn import functional as F
 from torch.distributions import Normal
 
@@ -45,17 +48,6 @@ def product_of_experts(m_vect, v_vect):
 
 def duplicate(x, rep):
     return x.expand(rep, *x.shape).reshape(-1, *x.shape[1:])
-
-
-def upscale_tensor(tensor: torch.Tensor, scale_factor: int) -> torch.Tensor:
-    # Check that the tensor is 2-dimensional
-    if tensor.dim() != 2:
-        raise ValueError("Input tensor must be 2-dimensional")
-
-    # Upscale the last dimension by the given factor
-    tensor = F.interpolate(tensor.unsqueeze(0).unsqueeze(0), scale_factor=scale_factor, mode="nearest").squeeze(0).squeeze(0)
-
-    return tensor
 
 
 def depth_deconv(in_planes, out_planes):

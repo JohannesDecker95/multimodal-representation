@@ -1,10 +1,12 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 import random
 import copy
 import math
 from tqdm import tqdm
+from scipy.interpolate import interp1d
 
 
 def detach_var(var):
@@ -87,7 +89,45 @@ def log_normal(x, m, v):
     return log_prob
 
 
+def enlarge_tensor_by_factor(tensor, factor):
+    # Check if the tensor has the right number of dimensions (2)
+    if len(tensor.shape) != 2:
+        raise ValueError("Input tensor must be 2D.")
+    if factor % 1 != 0:
+        raise ValueError("Factor must be an integer.")
+
+    # Convert the tensor to numpy array
+    array = tensor.cpu().numpy()
+
+    # Create a new array to hold the interpolated data
+    new_shape = (array.shape[0], array.shape[1]*factor)
+    new_array = np.zeros(new_shape, dtype=np.float32)
+
+    # Perform the interpolation for each batch
+    for i in range(array.shape[0]):
+        # Define the x coordinates for the original data points
+        x = np.arange(array.shape[1])
+        # Define the x coordinates for the interpolated data points
+        x_new = np.linspace(0, array.shape[1] - 1, new_shape[1])
+        # Create a function to perform the interpolation
+        f = interp1d(x, array[i], kind='quadratic')
+        # Perform the interpolation and store the result in the new array
+        new_array[i] = f(x_new)
+
+    # Convert the new numpy array back to tensor
+    tensor = torch.from_numpy(new_array)
+    return tensor
+
+
 def kl_normal(qm, qv, pm, pv):
+    # SHAPE OF mu_z: torch.Size([64, 256])
+    # SHAPE OF var_z: torch.Size([64, 256])
+    # SHAPE OF mu_prior.squeeze(0): torch.Size([128])
+    # SHAPE OF var_prior.squeeze(0): torch.Size([128])
+    # kl_normal(mu_z, var_z, mu_prior.squeeze(0), var_prior.squeeze(0))
+        # [64, 256],[64, 256],      [128],               [128]
+    # torch.log(var_prior.squeeze(0)) - torch.log(var_z) + var_z / var_prior.squeeze(0) + (mu_z - mu_prior.squeeze(0)).pow(2) / var_prior.squeeze(0) - 1
+                            # [128]   -       [64, 256] + [64, 256]/[128]
     element_wise = 0.5 * (
         torch.log(pv) - torch.log(qv) + qv / pv + (qm - pm).pow(2) / pv - 1
     )
