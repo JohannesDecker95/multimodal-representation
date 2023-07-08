@@ -22,15 +22,12 @@ class ProprioEncoder(nn.Module):
             nn.LeakyReLU(0.1, inplace=True),
             nn.Linear(128, z_depth * z_dim),
             nn.LeakyReLU(0.1, inplace=True),
-            # nn.Linear(out, out),
-            # nn.LeakyReLU(0.1, inplace=True)
         )
 
         if initailize_weights:
             init_weights(self.modules())
 
     def forward(self, proprio, z_depth):
-        # return self.proprio_encoder(proprio).unsqueeze(z_depth)
         return self.proprio_encoder(proprio).unsqueeze(2)
 
 
@@ -109,8 +106,7 @@ class ImageEncoder(nn.Module):
 
         # image embedding parameters
         flattened = self.flatten(out_img_conv6)
-        print("SHAPE OF FLATTENED TENSOR: " + str(flattened.shape)) #########
-        # img_out = self.img_encoder(flattened).unsqueeze(self.z_depth)
+        ###print("SHAPE OF FLATTENED TENSOR: " + str(flattened.shape)) #########
         img_out = self.img_encoder(flattened).unsqueeze(2)
 
         return img_out, img_out_convs
@@ -134,7 +130,6 @@ class DepthEncoder(nn.Module):
         self.depth_conv6 = conv2d(128, z_dim, stride=2)
         self.depth_conv7 = conv2d(z_dim, z_depth * z_dim, stride=2)
 
-        # self.depth_encoder = nn.Linear(4 * z_dim, 2 * z_dim) #########
         self.depth_encoder = nn.Linear(z_depth * z_dim, z_depth * z_dim)
         self.flatten = Flatten()
 
@@ -163,8 +158,7 @@ class DepthEncoder(nn.Module):
 
         # depth embedding parameters
         flattened = self.flatten(out_depth_conv7)
-        print("SHAPE OF FLATTENED TENSOR 2: " + str(flattened.shape)) #########
-        # depth_out = self.depth_encoder(flattened).unsqueeze(z_depth)
+        ###print("SHAPE OF FLATTENED TENSOR 2: " + str(flattened.shape)) #########
         depth_out = self.depth_encoder(flattened).unsqueeze(2)
 
         return depth_out, depth_out_convs

@@ -55,7 +55,7 @@ class selfsupervised:
             action_dim=configs["action_dim"],
         ).to(self.device)
 
-        print("selfsupervised z_depth: " + str(configs["zdepth"]))
+        ###print("selfsupervised z_depth: " + str(configs["zdepth"]))
 
         self.optimizer = optim.Adam(
             self.model.parameters(),
@@ -246,21 +246,21 @@ class selfsupervised:
             paired_out, contact_out, flow2, optical_flow2_mask, ee_delta_out, mm_feat, mu_z, var_z, mu_prior, var_prior, z_depth = self.model(
                 image, force, proprio, depth, action
             )
-            print("SHAPE OF mu_z: " + str(mu_z.shape))
-            print("mu_z: " + str(mu_z))
-            print("SHAPE OF var_z: " + str(var_z.shape))
-            print("var_z: " + str(var_z))
+            ###print("SHAPE OF mu_z: " + str(mu_z.shape))
+            ###print("mu_z: " + str(mu_z))
+            ###print("SHAPE OF var_z: " + str(var_z.shape))
+            ###print("var_z: " + str(var_z))
 
-            print("SHAPE OF mu_prior: " + str(mu_prior.size()))
-            print("z_depth: " + str(z_depth))
+            ###print("SHAPE OF mu_prior: " + str(mu_prior.size()))
+            ###print("z_depth: " + str(z_depth))
 
             mu_prior = enlarge_tensor_by_factor(mu_prior, int(z_depth/2)).to(self.device)
             var_prior = enlarge_tensor_by_factor(var_prior, int(z_depth/2)).to(self.device)
 
-            print("SHAPE OF mu_prior: " + str(mu_prior.size()))
-            print("mu_prior: " + str(mu_prior))
-            print("SHAPE OF var_prior: " + str(var_prior.size()))
-            print("var_prior: " + str(var_prior))
+            ###print("SHAPE OF mu_prior: " + str(mu_prior.size()))
+            ###print("mu_prior: " + str(mu_prior))
+            ###print("SHAPE OF var_prior: " + str(var_prior.size()))
+            ###print("var_prior: " + str(var_prior))
             kl = self.alpha_kl * torch.mean(
                 kl_normal(mu_z, var_z, mu_prior.squeeze(0), var_prior.squeeze(0))
             )
