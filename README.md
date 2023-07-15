@@ -24,7 +24,7 @@ cd multimodal/dataset
 
 ## OPTIONAL: IF first execution of the training process failed because of "OSError: [Errno 24] Too many open files"
 ## --> Set systems softlimit to hardlimit (influences the limit for the current shell session only)
-`ulimit -n `ulimit -Hn``
+`ulimit -n 'ulimit -Hn'`
 ## To check if it worked, use the follwoing command:
 `ulimit -n`
 
