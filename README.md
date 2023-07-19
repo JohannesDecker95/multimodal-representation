@@ -11,13 +11,14 @@ Code written by: Matthew Tan, Michelle Lee, Peter Zachares, Yuke Zhu
 Adjusted and extended by: Johannes Decker
 
 ## requirements
-The original list of required packages is contained in `requirements.txt`
+The original list of required packages is contained in `requirements.txt`.
 
-To get this repo up and running conda-forge/miniforge package management was used (Installation: https://kirenz.github.io/codelabs/codelabs/miniforge-setup/#0).
+To get this repo up and running conda-forge/miniforge package management was used\
+(Installation: https://kirenz.github.io/codelabs/codelabs/miniforge-setup/#0).
 
 The packages and their versions listed in `requirements.txt` have been updated manually to execute the training process on macOS with apple silicon arm chip (what is my working device).
 
-All the finally used packages are listed in the `environment.yml`. After conda was set up successfully, this file can be used to recreate the conda environment for the execution of the training process.
+All the finally used packages are listed in the `environment.yml`. After conda was set up successfully, this file can be used to recreate the conda environment for the execution of the training process.\
 
 `conda env create --name envname --file=environment.yml`
 
@@ -38,12 +39,12 @@ cd multimodal/dataset
 `python mini_main.py --config configs/training_default.yaml`
 
 ## OPTIONAL: Check System settings for number of allowed open files
-`launchctl limit maxfiles`
+`launchctl limit maxfiles` \
 
 outputs: maxfiles    SOFTLIMIT       HARDLIMIT
 
 ## OPTIONAL: IF first execution of the training process failed because of "OSError: [Errno 24] Too many open files"
---> Set systems softlimit to hardlimit (influences the limit for the current shell session only)
+--> Set systems softlimit to hardlimit (influences the limit for the current shell session only)\
 
 `ulimit -n 'ulimit -Hn'`
 
