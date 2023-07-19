@@ -1,7 +1,6 @@
-# multimodal_representation
-Adjustment of https://arxiv.org/abs/1810.10191 papers code for "IN2107 Seminar on Robotics Science and Systems Intelligence" of TUM
-
 # Multimodal Representation 
+
+Adjustment of https://arxiv.org/abs/1810.10191 papers code for "IN2107 Seminar on Robotics Science and Systems Intelligence" of TUM
 
 Code for Making Sense of Vision and Touch. 
 https://sites.google.com/view/visionandtouch
@@ -21,6 +20,8 @@ The packages and their versions listed in `requirements.txt` have been updated m
 All the finally used packages are listed in the `environment.yml`. After conda was set up successfully, this file can be used to recreate the conda environment for the execution of the training process.\
 
 `conda env create --name envname --file=environment.yml`
+
+(Replace envname with the name you want to give the conda environment)
 
 Mayby the used packages in the `environment.yml` have to be adjusted, if you want to execute the training process on other systems/chips as Windows, Linux, x64 and x86.
 
