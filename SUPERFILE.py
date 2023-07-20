@@ -69,25 +69,25 @@ class Logger(object):
                 os.mkdir(os.path.join(base_dir, sf))
 
     def setup_loggers(self):
-    """
-    Sets up a logger that logs to both file and stdout
-    """
-    log_path = os.path.join(self.log_folder, "log.log")
+        """
+        Sets up a logger that logs to both file and stdout
+        """
+        log_path = os.path.join(self.log_folder, "log.log")
 
-    self.print_logger = logging.getLogger()
-    self.print_logger.setLevel(
-        getattr(logging, self.configs["log_level"].upper(), None)
-    )
-    handlers = [logging.StreamHandler(sys.stdout), logging.FileHandler(log_path)]
-    formatter = logging.Formatter(
-        "%(levelname)s - %(filename)s:%(lineno)d - %(asctime)s - %(message)s"
-    )
-    for h in handlers:
-        h.setFormatter(formatter)
-        self.print_logger.addHandler(h)
+        self.print_logger = logging.getLogger()
+        self.print_logger.setLevel(
+            getattr(logging, self.configs["log_level"].upper(), None)
+        )
+        handlers = [logging.StreamHandler(sys.stdout), logging.FileHandler(log_path)]
+        formatter = logging.Formatter(
+            "%(levelname)s - %(filename)s:%(lineno)d - %(asctime)s - %(message)s"
+        )
+        for h in handlers:
+            h.setFormatter(formatter)
+            self.print_logger.addHandler(h)
 
-    # Setup Tensorboard
-    self.tb = SummaryWriter(os.path.join(self.log_folder, "runs", self.tb_prefix))
+        # Setup Tensorboard
+        self.tb = SummaryWriter(os.path.join(self.log_folder, "runs", self.tb_prefix))
 
     # def setup_checks(self):
     #     """
