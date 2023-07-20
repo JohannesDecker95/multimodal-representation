@@ -28,6 +28,9 @@ from torchvision import transforms
 from scipy.ndimage import zoom
 from torch.distributions import Normal
 
+import warnings
+warnings.filterwarnings('error', category=UserWarning)
+
 
 class Logger(object):
     """
@@ -396,7 +399,8 @@ class selfsupervised:
 
         b, _, h, w = optical_flow_label.size()
 
-        optical_flow_mask = nn.functional.upsample(
+        # optical_flow_mask = nn.functional.upsample(
+        optical_flow_mask = nn.functional.interpolate(
             optical_flow2_mask, size=(h, w), mode="bilinear"
         )
 
@@ -599,7 +603,8 @@ class selfsupervised:
 
         b, c, h, w = flow_label.size()
 
-        upsampled_flow = nn.functional.upsample(flow2, size=(h, w), mode="bilinear")
+        # upsampled_flow = nn.functional.upsample(flow2, size=(h, w), mode="bilinear")
+        upsampled_flow = nn.functional.interpolate(flow2, size=(h, w), mode="bilinear")
         upsampled_flow = upsampled_flow.cpu().detach().numpy()
         orig_image = image[image_index].cpu().numpy()
 
@@ -1213,13 +1218,15 @@ def EPE(input_flow, target_flow, device, sparse=False, mean=True):
 def realEPE(output, target, device, sparse=False):
     b, _, h, w = target.size()
 
-    upsampled_output = nn.functional.upsample(output, size=(h, w), mode="bilinear")
+    # upsampled_output = nn.functional.upsample(output, size=(h, w), mode="bilinear")
+    upsampled_output = nn.functional.interpolate(output, size=(h, w), mode="bilinear")
     return EPE(upsampled_output, target, device, sparse, mean=True)
 
 
 def realAAE(output, target, device, sparse=False):
     b, _, h, w = target.size()
-    upsampled_output = nn.functional.upsample(output, size=(h, w), mode="bilinear")
+    # upsampled_output = nn.functional.upsample(output, size=(h, w), mode="bilinear")
+    upsampled_output = nn.functional.interpolate(output, size=(h, w), mode="bilinear")
     return AAE(upsampled_output, target, device, sparse, mean=True)
 
 
@@ -1740,7 +1747,8 @@ class selfsupervised:
 
         b, _, h, w = optical_flow_label.size()
 
-        optical_flow_mask = nn.functional.upsample(
+        # optical_flow_mask = nn.functional.upsample(
+        optical_flow_mask = nn.functional.interpolate(
             optical_flow2_mask, size=(h, w), mode="bilinear"
         )
 
@@ -1943,7 +1951,8 @@ class selfsupervised:
 
         b, c, h, w = flow_label.size()
 
-        upsampled_flow = nn.functional.upsample(flow2, size=(h, w), mode="bilinear")
+        # upsampled_flow = nn.functional.upsample(flow2, size=(h, w), mode="bilinear")
+        upsampled_flow = nn.functional.interpolate(flow2, size=(h, w), mode="bilinear")
         upsampled_flow = upsampled_flow.cpu().detach().numpy()
         orig_image = image[image_index].cpu().numpy()
 
