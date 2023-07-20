@@ -29,7 +29,7 @@ from scipy.ndimage import zoom
 from torch.distributions import Normal
 
 import warnings
-warnings.filterwarnings('error', category=UserWarning)
+warnings.filterwarnings('error')
 
 
 class Logger(object):
@@ -1350,7 +1350,8 @@ class MultimodalManipulationDataset(Dataset):
                 "ee_yaw_next": dataset["proprio"][dataset_index + 1][:self.action_dim],
                 "contact_next": np.array(
                     [dataset["contact"][dataset_index + 1].sum() > 0]
-                ).astype(np.float),
+                # ).astype(np.float),
+                ).astype(np.float64),
                 "unpaired_image": unpaired_image,
                 "unpaired_force": unpaired_force,
                 "unpaired_proprio": unpaired_proprio,
