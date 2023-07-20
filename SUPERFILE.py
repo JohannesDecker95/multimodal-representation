@@ -30,6 +30,26 @@ from torch.distributions import Normal
 
 import warnings
 warnings.filterwarnings('error')
+torch.set_printoptions(profile="default")
+
+
+import tensorboardX.x2num
+from tensorboardX.x2num import check_nan as original_check_nan
+# Monkey patching
+def check_nan_patched(array):
+    tmp = np.sum(array)
+    if np.isnan(tmp) or np.isinf(tmp):
+        raise ValueError('NaN or Inf found in input tensor.')
+    return array
+# def check_nan_patched(array):
+#     tmp = np.sum(array)
+#     if np.isnan(tmp) or np.isinf(tmp):
+#         logger.warning('NaN or Inf found in input tensor.')
+#     return array
+
+# Replace original function with patched version
+tensorboardX.x2num.check_nan = check_nan_patched
+
 
 
 class Logger(object):
@@ -2463,8 +2483,6 @@ if __name__ == "__main__":
     # Merge configs and args
     for arg in vars(args):
         configs[arg] = getattr(args, arg)
-
-    torch.set_printoptions(profile="default")
 
     # Initialize the loggers
     logger = Logger(configs)
