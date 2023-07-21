@@ -173,7 +173,7 @@ class Logger(object):
         Wrapper for print statement
         """
         self.print_logger.info(args)
-        
+
 
 class SensorFusion(nn.Module):
     """
@@ -281,6 +281,18 @@ class SensorFusion(nn.Module):
         frc_out = self.frc_encoder(frc_in)
         proprio_out = self.proprio_encoder(proprio_in, z_depth) ###
 
+        # print("batch_dim: " + str(batch_dim))
+        # print("image: " + str(image))
+        # print("depth: " + str(depth))
+        # print("img_out: " + str(img_out))
+        # print("img_out_convs: " + str(img_out_convs))
+        # print("depth_out: " + str(depth_out))
+        # print("depth_out_convs: " + str(depth_out_convs))
+        # print("frc_out: " + str(frc_out))
+        # print("proprio_out: " + str(proprio_out))
+
+        print("self.deterministic: " + str(self.deterministic))
+
         if self.deterministic:
             # multimodal embedding
             mm_f1 = torch.cat([img_out, frc_out, proprio_out, depth_out], 1).squeeze()
@@ -317,32 +329,32 @@ class SensorFusion(nn.Module):
             mu_prior_resized = torch.zeros((batch_dim, pos2, 1), dtype=torch.float32).to(self.device) # .to('mps:0')
             var_prior_resized = torch.zeros((batch_dim, pos2, 1), dtype=torch.float32).to(self.device) # .to('mps:0')
 
-            ###print("SHAPE OF mu_z_img: " + str(mu_z_img.shape)) #########
-            ###print("SHAPE OF mu_z_frc: " + str(mu_z_frc.shape)) #########
-            ###print("SHAPE OF mu_z_proprio: " + str(mu_z_proprio.shape)) #########
-            ###print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape)) #########
-            ###print("SHAPE OF mu_prior_resized: " + str(mu_prior_resized.shape)) #########
+            print("SHAPE OF mu_z_img: " + str(mu_z_img.shape) + str(mu_z_img)) #########
+            print("SHAPE OF mu_z_frc: " + str(mu_z_frc.shape) + str(mu_z_frc)) #########
+            print("SHAPE OF mu_z_proprio: " + str(mu_z_proprio.shape) + str(mu_z_proprio)) #########
+            print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape) + str(mu_z_proprio)) #########
+            print("SHAPE OF mu_prior_resized: " + str(mu_z_proprio.shape) + str(mu_z_proprio)) #########
 
-            m_vect = torch.cat(
-                [mu_z_img, mu_z_frc, mu_z_proprio, mu_z_depth, mu_prior_resized],
-                dim=2 
-            )
-            var_vect = torch.cat(
-                [var_z_img, var_z_frc, var_z_proprio, var_z_depth, var_prior_resized],
-                dim=2,
-            )
+            m_vect = torch.cat([mu_z_img, mu_z_frc, mu_z_proprio, mu_z_depth, mu_prior_resized], dim=2 )
+            var_vect = torch.cat([var_z_img, var_z_frc, var_z_proprio, var_z_depth, var_prior_resized], dim=2 )
+
+            m_vect = remove_zeros(m_vect)
+            var_vect = remove_zeros(var_vect)
+
+            print("m_vect: " + str(m_vect.size()) + str(m_vect))
+            print("var_vect: " + str(var_vect.size()) + str(var_vect))
 
             # Fuse modalities mean / variances using product of experts
-            mu_z, var_z = product_of_experts(m_vect, var_vect)
+            mu_z, var_z = product_of_experts(m_vect, var_vect) # => contain both 0 values 
 
             # Sample Gaussian to get latent
             z = sample_gaussian(mu_z, var_z, self.device)
 
-        ###print("z: " + str(z.shape))
-        ###print("m_vect: " + str(m_vect.shape))
-        ###print("var_vect: " + str(var_vect.shape))
-        ###print("mu_z: " + str(mu_z.shape))
-        ###print("var_z: " + str(var_z.shape))
+        # print("z: " + str(z.shape) + str(z)) # nan
+        # print("m_vect: " + str(m_vect.shape) + str(m_vect))
+        # print("var_vect: " + str(var_vect.shape) + str(var_vect))
+        # print("mu_z: " + str(mu_z.shape) + str(mu_z)) # nan
+        # print("var_z: " + str(var_z.shape) + str(var_z))
 
         if self.encoder_bool or action_in is None:
             if self.deterministic:
@@ -433,6 +445,10 @@ class SensorFusionSelfSupervised(SensorFusion):
         action_in,
     ):
 
+        print("self.encoder_bool: " + str(self.encoder_bool))
+        print("action_in: " + str(action_in))
+        print("self.deterministic: " + str(self.deterministic))
+
         if self.encoder_bool:
             # returning latent space representation if model is set in encoder mode
             z = self.forward_encoder(vis_in, frc_in, proprio_in, depth_in, action_in, self.z_depth)
@@ -501,6 +517,25 @@ class SensorFusionSelfSupervised(SensorFusion):
                 var_prior,
                 self.z_depth
             )
+
+def remove_zeros(tensor):
+    """
+    This function takes a torch tensor as input and adds 1e-9 to each element of the tensor until it no longer contains
+    any zero values. The modified tensor is then returned.
+
+    Parameters:
+    tensor (torch.Tensor): The input tensor.
+
+    Returns:
+    tensor (torch.Tensor): The modified tensor with no zero values.
+    """
+    # Check if the tensor contains any zero values
+    while torch.any(tensor == 0):
+        # If it does, add 1e-9 to each element of the tensor
+        tensor += 1e-9
+
+    # Return the modified tensor
+    return tensor
 
 def detach_var(var):
     """Detaches a var from torch
@@ -1069,7 +1104,7 @@ class selfsupervised:
         # self.device = torch.device("cuda" if use_cuda else "cpu")
         self.device = torch.device("mps" if torch.backends.mps.is_available() else("cuda" if torch.cuda.is_available() else "cpu"))
 
-        if (self.device is "mps") or (self.device is "cpu"):
+        if (self.device == "mps") or (self.device == "cpu"):
             logger.print("Let's use", torch.cuda.device_count(), "GPUs!")
 
         set_seeds(configs["seed"], use_cuda)
@@ -1154,10 +1189,10 @@ class selfsupervised:
 
                 print("sample_batched: " + str(sample_batched))
                 loss, mm_feat, results, image_packet = self.loss_calc(sample_batched)
-                print("loss_1: " + str(loss)) # nan
-                print("mm_feat :" + str(mm_feat)) # nan
-                print("results :" + str(results))
-                print("image_packet :" + str(image_packet)) # nan
+                # print("loss_1: " + str(loss)) # nan
+                # print("mm_feat :" + str(mm_feat)) # nan
+                # print("results :" + str(results))
+                # print("image_packet :" + str(image_packet)) # nan
 
                 loss.backward()
                 self.optimizer.step()
@@ -1284,6 +1319,12 @@ class selfsupervised:
             self.device
         ).transpose(1, 3).transpose(2, 3)
 
+        print("unpaired_image: " + str(unpaired_image.size()) + str(unpaired_image))
+        print("unpaired_force: " + str(unpaired_force.size()) + str(unpaired_force))
+        print("unpaired_proprio: " + str(unpaired_proprio.size()) + str(unpaired_proprio))
+        print("unpaired_depth: " + str(unpaired_depth.size()) + str(unpaired_depth))
+
+
         # labels to predict
         gt_ee_pos_delta = sampled_batched["ee_yaw_next"].to(self.device)
 
@@ -1345,11 +1386,11 @@ class selfsupervised:
         )
 
 
-        print("unpaired_image: " + str(unpaired_image))
-        print("unpaired_force: " + str(unpaired_force))
-        print("unpaired_proprio: " + str(unpaired_proprio))
-        print("unpaired_depth: " + str(unpaired_depth))
-        print("action: " + str(action))
+        # print("unpaired_image: " + str(unpaired_image))
+        # print("unpaired_force: " + str(unpaired_force))
+        # print("unpaired_proprio: " + str(unpaired_proprio))
+        # print("unpaired_depth: " + str(unpaired_depth))
+        # print("action: " + str(action))
         unpaired_total_losses = self.model(
             unpaired_image, unpaired_force, unpaired_proprio, unpaired_depth, action
         )
@@ -1362,6 +1403,13 @@ class selfsupervised:
         # print("torch.zeros(unpaired_out.size(0), 1).to(self.device) :" + str(torch.zeros(unpaired_out.size(0), 1).to(self.device)))
         
         unpaired_loss = self.alpha_pair * self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device))
+
+        xyz = self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device))
+
+        print("unpaired_out: " + str(unpaired_out.size()) + str(unpaired_out))
+        print("self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device)): " + str(xyz.size()) + str(xyz))
+        print("self.alpha_pair: " + str(self.alpha_pair))
+        print("unpaired_loss: " + str(unpaired_loss.size()) + str(unpaired_loss))
 
         loss = (
             contact_loss
@@ -1971,6 +2019,10 @@ def sample_gaussian(m, v, device):
     epsilon = Normal(0, 1).sample(m.size())
     z = m + torch.sqrt(v) * epsilon.to(device)
 
+    print("m: " + str(m.size) + str(m))
+    print("v: " + str(v.size) + str(v))
+    print("epsilon: " + str(epsilon.size) + str(epsilon))
+
     return z
 
 
@@ -1987,6 +2039,10 @@ def product_of_experts(m_vect, v_vect):
 
     mu = (m_vect * T_vect).sum(2) * (1 / T_vect.sum(2))
     var = 1 / T_vect.sum(2)
+
+    print("T_vect: " + str(T_vect.size) + str(T_vect))
+    print("mu: " + str(mu.size) + str(mu))
+    print("var: " + str(var.size) + str(var))
 
     return mu, var
 
