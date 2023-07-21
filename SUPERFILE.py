@@ -41,11 +41,6 @@ def check_nan_patched(array):
     if np.isnan(tmp) or np.isinf(tmp):
         raise ValueError('NaN or Inf found in input tensor.')
     return array
-# def check_nan_patched(array):
-#     tmp = np.sum(array)
-#     if np.isnan(tmp) or np.isinf(tmp):
-#         logger.warning('NaN or Inf found in input tensor.')
-#     return array
 
 # Replace original function with patched version
 tensorboardX.x2num.check_nan = check_nan_patched
@@ -198,8 +193,8 @@ class SensorFusion(nn.Module):
         self.device = device
         self.deterministic = deterministic
 
-        ###print("SensorFusion z_dim: " + str(z_dim))
-        ###print("SensorFusion z_depth: " + str(z_depth))
+        # print("SensorFusion z_dim: " + str(z_dim))
+        # print("SensorFusion z_depth: " + str(z_depth))
 
         # zero centered, 1 std normal distribution
         self.z_prior_m = torch.nn.Parameter(
@@ -232,7 +227,7 @@ class SensorFusion(nn.Module):
         # action fusion network
         # -----------------------
         adjusted = int(self.z_dim*z_depth/2)
-        ###print("adjusted: " + str(adjusted))
+        # print("adjusted: " + str(adjusted))
 
         self.st_fusion_fc1 = nn.Sequential(
             # nn.Linear(32 + self.z_dim, 128), nn.LeakyReLU(0.1, inplace=True)
@@ -303,17 +298,17 @@ class SensorFusion(nn.Module):
             # Encoder priors
             mu_prior, var_prior = self.z_prior
 
-            ###print("z_depth: " + str(z_depth))
-            ###print("mu_prior: " + str(mu_prior))
-            ###print("SIZE OF mu_prior: " + str(mu_prior.shape))
-            ###print("duplicate function: " + str((duplicate(mu_prior, batch_dim)).shape))
+            # print("z_depth: " + str(z_depth))
+            # print("mu_prior: " + str(mu_prior))
+            # print("SIZE OF mu_prior: " + str(mu_prior.shape))
+            # print("duplicate function: " + str((duplicate(mu_prior, batch_dim)).shape))
 
             # Duplicate prior parameters for each data point in the batch
             mu_prior_resized = duplicate(mu_prior, batch_dim).unsqueeze(2)
             var_prior_resized = duplicate(var_prior, batch_dim).unsqueeze(2)
 
-            ###print("mu_prior_resized: " + str(mu_prior_resized.shape))
-            ###print("var_prior_resized: " + str(var_prior_resized.shape))
+            # print("mu_prior_resized: " + str(mu_prior_resized.shape))
+            # print("var_prior_resized: " + str(var_prior_resized.shape))
 
             # Modality Mean and Variances
             mu_z_img, var_z_img = gaussian_parameters(img_out, dim=1)
@@ -329,11 +324,11 @@ class SensorFusion(nn.Module):
             mu_prior_resized = torch.zeros((batch_dim, pos2, 1), dtype=torch.float32).to(self.device) # .to('mps:0')
             var_prior_resized = torch.zeros((batch_dim, pos2, 1), dtype=torch.float32).to(self.device) # .to('mps:0')
 
-            print("SHAPE OF mu_z_img: " + str(mu_z_img.shape) + str(mu_z_img)) #########
-            print("SHAPE OF mu_z_frc: " + str(mu_z_frc.shape) + str(mu_z_frc)) #########
-            print("SHAPE OF mu_z_proprio: " + str(mu_z_proprio.shape) + str(mu_z_proprio)) #########
-            print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape) + str(mu_z_proprio)) #########
-            print("SHAPE OF mu_prior_resized: " + str(mu_z_proprio.shape) + str(mu_z_proprio)) #########
+            # print("SHAPE OF mu_z_img: " + str(mu_z_img.shape) + str(mu_z_img)) #########
+            # print("SHAPE OF mu_z_frc: " + str(mu_z_frc.shape) + str(mu_z_frc)) #########
+            # print("SHAPE OF mu_z_proprio: " + str(mu_z_proprio.shape) + str(mu_z_proprio)) #########
+            # print("SHAPE OF mu_z_depth: " + str(mu_z_depth.shape) + str(mu_z_proprio)) #########
+            # print("SHAPE OF mu_prior_resized: " + str(mu_z_proprio.shape) + str(mu_z_proprio)) #########
 
             m_vect = torch.cat([mu_z_img, mu_z_frc, mu_z_proprio, mu_z_depth, mu_prior_resized], dim=2 )
             var_vect = torch.cat([var_z_img, var_z_frc, var_z_proprio, var_z_depth, var_prior_resized], dim=2 )
@@ -341,8 +336,8 @@ class SensorFusion(nn.Module):
             m_vect = remove_zeros(m_vect)
             var_vect = remove_zeros(var_vect)
 
-            print("m_vect: " + str(m_vect.size()) + str(m_vect))
-            print("var_vect: " + str(var_vect.size()) + str(var_vect))
+            # print("m_vect: " + str(m_vect.size()) + str(m_vect))
+            # print("var_vect: " + str(var_vect.size()) + str(var_vect))
 
             # Fuse modalities mean / variances using product of experts
             mu_z, var_z = product_of_experts(m_vect, var_vect) # => contain both 0 values 
@@ -366,9 +361,9 @@ class SensorFusion(nn.Module):
             act_feat = self.action_encoder(action_in)
 
             # state-action feature
-            ###print("act_feat: " + str(act_feat))
+            # print("act_feat: " + str(act_feat))
             mm_act_f1 = torch.cat([z, act_feat], 1)
-            ###print("mm_act_f1: " + str(mm_act_f1.shape))
+            # print("mm_act_f1: " + str(mm_act_f1.shape))
             mm_act_f2 = self.st_fusion_fc1(mm_act_f1)
             mm_act_feat = self.st_fusion_fc2(mm_act_f2)
 
@@ -1119,7 +1114,7 @@ class selfsupervised:
             action_dim=configs["action_dim"],
         ).to(self.device)
 
-        ###print("selfsupervised z_depth: " + str(configs["zdepth"]))
+        # print("selfsupervised z_depth: " + str(configs["zdepth"]))
 
         self.optimizer = optim.Adam(
             self.model.parameters(),
@@ -1337,21 +1332,21 @@ class selfsupervised:
             paired_out, contact_out, flow2, optical_flow2_mask, ee_delta_out, mm_feat, mu_z, var_z, mu_prior, var_prior, z_depth = self.model(
                 image, force, proprio, depth, action
             )
-            ###print("SHAPE OF mu_z: " + str(mu_z.shape))
-            ###print("mu_z: " + str(mu_z))
-            ###print("SHAPE OF var_z: " + str(var_z.shape))
-            ###print("var_z: " + str(var_z))
+            # print("SHAPE OF mu_z: " + str(mu_z.shape))
+            # print("mu_z: " + str(mu_z))
+            # print("SHAPE OF var_z: " + str(var_z.shape))
+            # print("var_z: " + str(var_z))
 
-            ###print("SHAPE OF mu_prior: " + str(mu_prior.size()))
-            ###print("z_depth: " + str(z_depth))
+            # print("SHAPE OF mu_prior: " + str(mu_prior.size()))
+            # print("z_depth: " + str(z_depth))
 
             mu_prior = enlarge_tensor_by_factor(mu_prior, int(z_depth/2)).to(self.device)
             var_prior = enlarge_tensor_by_factor(var_prior, int(z_depth/2)).to(self.device)
 
-            ###print("SHAPE OF mu_prior: " + str(mu_prior.size()))
-            ###print("mu_prior: " + str(mu_prior))
-            ###print("SHAPE OF var_prior: " + str(var_prior.size()))
-            ###print("var_prior: " + str(var_prior))
+            # print("SHAPE OF mu_prior: " + str(mu_prior.size()))
+            # print("mu_prior: " + str(mu_prior))
+            # print("SHAPE OF var_prior: " + str(var_prior.size()))
+            # print("var_prior: " + str(var_prior))
             kl = self.alpha_kl * torch.mean(
                 kl_normal(mu_z, var_z, mu_prior.squeeze(0), var_prior.squeeze(0))
             )
@@ -1406,10 +1401,10 @@ class selfsupervised:
 
         xyz = self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device))
 
-        print("unpaired_out: " + str(unpaired_out.size()) + str(unpaired_out))
-        print("self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device)): " + str(xyz.size()) + str(xyz))
-        print("self.alpha_pair: " + str(self.alpha_pair))
-        print("unpaired_loss: " + str(unpaired_loss.size()) + str(unpaired_loss))
+        # print("unpaired_out: " + str(unpaired_out.size()) + str(unpaired_out))
+        # print("self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device)): " + str(xyz.size()) + str(xyz))
+        # print("self.alpha_pair: " + str(self.alpha_pair))
+        # print("unpaired_loss: " + str(unpaired_loss.size()) + str(unpaired_loss))
 
         loss = (
             contact_loss
@@ -2115,3 +2110,4 @@ if __name__ == "__main__":
     trainer = selfsupervised(configs, logger)
 
     trainer.train()
+    
