@@ -60,7 +60,7 @@ class Logger(object):
         )
         handlers = [logging.StreamHandler(sys.stdout), logging.FileHandler(log_path)]
         formatter = logging.Formatter(
-            "%(levelname)s - %(filename)s - %(asctime)s - %(message)s"
+            "%(levelname)s - %(filename)s:%(lineno)d - %(asctime)s - %(message)s"
         )
         for h in handlers:
             h.setFormatter(formatter)

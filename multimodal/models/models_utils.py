@@ -81,3 +81,22 @@ def filter_depth(depth_image):
         depth_image > 1e-7, depth_image, torch.zeros_like(depth_image)
     )
     return torch.where(depth_image < 2, depth_image, torch.zeros_like(depth_image))
+
+def remove_zeros(tensor):
+    """
+    This function takes a torch tensor as input and adds 1e-9 to each element of the tensor until it no longer contains
+    any zero values. The modified tensor is then returned.
+
+    Parameters:
+    tensor (torch.Tensor): The input tensor.
+
+    Returns:
+    tensor (torch.Tensor): The modified tensor with no zero values.
+    """
+    # Check if the tensor contains any zero values
+    while torch.any(tensor == 0):
+        # If it does, add 1e-9 to each element of the tensor
+        tensor += 1e-9
+
+    # Return the modified tensor
+    return tensor

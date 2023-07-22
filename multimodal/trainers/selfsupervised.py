@@ -40,7 +40,7 @@ class selfsupervised:
         # self.device = torch.device("cuda" if use_cuda else "cpu")
         self.device = torch.device("mps" if torch.backends.mps.is_available() else("cuda" if torch.cuda.is_available() else "cpu"))
 
-        if use_cuda:
+        if (self.device == "mps") or (self.device == "cpu"):
             logger.print("Let's use", torch.cuda.device_count(), "GPUs!")
 
         set_seeds(configs["seed"], use_cuda)
@@ -55,7 +55,7 @@ class selfsupervised:
             action_dim=configs["action_dim"],
         ).to(self.device)
 
-        ###print("selfsupervised z_depth: " + str(configs["zdepth"]))
+        # print("selfsupervised z_depth: " + str(configs["zdepth"]))
 
         self.optimizer = optim.Adam(
             self.model.parameters(),
@@ -123,11 +123,22 @@ class selfsupervised:
                 t_st = time.time()
                 self.optimizer.zero_grad()
 
+                # print("sample_batched: " + str(sample_batched))
+
                 loss, mm_feat, results, image_packet = self.loss_calc(sample_batched)
+                # print("loss_1: " + str(loss)) # nan
+                # print("mm_feat :" + str(mm_feat)) # nan
+                # print("results :" + str(results))
+                # print("image_packet :" + str(image_packet)) # nan
 
                 loss.backward()
                 self.optimizer.step()
 
+
+                # print("loss_2: " + str(loss))
+                # print("results: " + str(results))
+                # print("self.global_cnt[train]: " + str(self.global_cnt["train"]))
+                # print("t_st: " + str(t_st))
                 self.record_results(loss, results, self.global_cnt["train"], t_st)
 
                 if self.global_cnt["train"] % self.configs["img_record_n"] == 0:
@@ -204,7 +215,7 @@ class selfsupervised:
         self.model.load_state_dict(ckpt)
         self.model.eval()
 
-    def loss_calc(self, sampled_batched):
+    def loss_calc(self, sampled_batched): ################################################
 
         # input data
         image = self.alpha_vision * sampled_batched["image"].to(self.device)
@@ -216,9 +227,20 @@ class selfsupervised:
 
         action = sampled_batched["action"].to(self.device)
 
+        # print("image: " + str(image) + str(image.size()))
+        # print("force: " + str(force) + str(force.size()))
+        # print("proprio: " + str(proprio) + str(proprio.size()))
+        # print("depth: " + str(depth) + str(depth.size()))
+        # print("action: " + str(action) + str(action.size()))
+        # print("#########################################################################\n#######################################################")
+
         contact_label = sampled_batched["contact_next"].to(self.device)
         optical_flow_label = sampled_batched["flow"].to(self.device)
         optical_flow_mask_label = sampled_batched["flow_mask"].to(self.device)
+
+        # print("contact_label: " + str(contact_label) + str(contact_label.size()))
+        # print("optical_flow_label: " + str(optical_flow_label) + str(optical_flow_label.size()))
+        # print("optical_flow_mask_label: " + str(optical_flow_mask_label) + str(optical_flow_mask_label.size()))
 
         # unpaired data for sampled point
         unpaired_image = self.alpha_vision * sampled_batched["unpaired_image"].to(
@@ -234,6 +256,12 @@ class selfsupervised:
             self.device
         ).transpose(1, 3).transpose(2, 3)
 
+        # print("unpaired_image: " + str(unpaired_image.size()) + str(unpaired_image))
+        # print("unpaired_force: " + str(unpaired_force.size()) + str(unpaired_force))
+        # print("unpaired_proprio: " + str(unpaired_proprio.size()) + str(unpaired_proprio))
+        # print("unpaired_depth: " + str(unpaired_depth.size()) + str(unpaired_depth))
+
+
         # labels to predict
         gt_ee_pos_delta = sampled_batched["ee_yaw_next"].to(self.device)
 
@@ -246,21 +274,21 @@ class selfsupervised:
             paired_out, contact_out, flow2, optical_flow2_mask, ee_delta_out, mm_feat, mu_z, var_z, mu_prior, var_prior, z_depth = self.model(
                 image, force, proprio, depth, action
             )
-            ###print("SHAPE OF mu_z: " + str(mu_z.shape))
-            ###print("mu_z: " + str(mu_z))
-            ###print("SHAPE OF var_z: " + str(var_z.shape))
-            ###print("var_z: " + str(var_z))
+            # print("SHAPE OF mu_z: " + str(mu_z.shape))
+            # print("mu_z: " + str(mu_z))
+            # print("SHAPE OF var_z: " + str(var_z.shape))
+            # print("var_z: " + str(var_z))
 
-            ###print("SHAPE OF mu_prior: " + str(mu_prior.size()))
-            ###print("z_depth: " + str(z_depth))
+            # print("SHAPE OF mu_prior: " + str(mu_prior.size()))
+            # print("z_depth: " + str(z_depth))
 
             mu_prior = enlarge_tensor_by_factor(mu_prior, int(z_depth/2)).to(self.device)
             var_prior = enlarge_tensor_by_factor(var_prior, int(z_depth/2)).to(self.device)
 
-            ###print("SHAPE OF mu_prior: " + str(mu_prior.size()))
-            ###print("mu_prior: " + str(mu_prior))
-            ###print("SHAPE OF var_prior: " + str(var_prior.size()))
-            ###print("var_prior: " + str(var_prior))
+            # print("SHAPE OF mu_prior: " + str(mu_prior.size()))
+            # print("mu_prior: " + str(mu_prior))
+            # print("SHAPE OF var_prior: " + str(var_prior.size()))
+            # print("var_prior: " + str(var_prior))
             kl = self.alpha_kl * torch.mean(
                 kl_normal(mu_z, var_z, mu_prior.squeeze(0), var_prior.squeeze(0))
             )
@@ -273,7 +301,8 @@ class selfsupervised:
 
         b, _, h, w = optical_flow_label.size()
 
-        optical_flow_mask = nn.functional.upsample(
+        # optical_flow_mask = nn.functional.upsample(
+        optical_flow_mask = nn.functional.interpolate(
             optical_flow2_mask, size=(h, w), mode="bilinear"
         )
 
@@ -293,13 +322,31 @@ class selfsupervised:
             paired_out, torch.ones(paired_out.size(0), 1).to(self.device)
         )
 
+
+        # print("unpaired_image: " + str(unpaired_image))
+        # print("unpaired_force: " + str(unpaired_force))
+        # print("unpaired_proprio: " + str(unpaired_proprio))
+        # print("unpaired_depth: " + str(unpaired_depth))
+        # print("action: " + str(action))
         unpaired_total_losses = self.model(
             unpaired_image, unpaired_force, unpaired_proprio, unpaired_depth, action
         )
         unpaired_out = unpaired_total_losses[0]
-        unpaired_loss = self.alpha_pair * self.loss_is_paired(
-            unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device)
-        )
+
+        # print("FIRST") ##################################
+        # print("self.alpha_pair: " + str(self.alpha_pair))
+        # print("self.loss_is_paired :" + str(self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device))))
+        # print("unpaired_out :" + str(unpaired_out)) # nan
+        # print("torch.zeros(unpaired_out.size(0), 1).to(self.device) :" + str(torch.zeros(unpaired_out.size(0), 1).to(self.device)))
+        
+        unpaired_loss = self.alpha_pair * self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device))
+
+        xyz = self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device))
+
+        # print("unpaired_out: " + str(unpaired_out.size()) + str(unpaired_out))
+        # print("self.loss_is_paired(unpaired_out, torch.zeros(unpaired_out.size(0), 1).to(self.device)): " + str(xyz.size()) + str(xyz))
+        # print("self.alpha_pair: " + str(self.alpha_pair))
+        # print("unpaired_loss: " + str(unpaired_loss.size()) + str(unpaired_loss))
 
         loss = (
             contact_loss
@@ -349,6 +396,9 @@ class selfsupervised:
         flow_loss, contact_loss, is_paired_loss, contact_accuracy, is_paired_accuracy, ee_delta_loss, kl = (
             results
         )
+
+        # print("flow_loss.item(): " + str(flow_loss.item()))
+        # print("global_cnt: " + str(global_cnt))
 
         self.logger.tb.add_scalar("loss/optical_flow", flow_loss.item(), global_cnt)
         self.logger.tb.add_scalar("loss/contact", contact_loss.item(), global_cnt)
@@ -476,7 +526,8 @@ class selfsupervised:
 
         b, c, h, w = flow_label.size()
 
-        upsampled_flow = nn.functional.upsample(flow2, size=(h, w), mode="bilinear")
+        # upsampled_flow = nn.functional.upsample(flow2, size=(h, w), mode="bilinear")
+        upsampled_flow = nn.functional.interpolate(flow2, size=(h, w), mode="bilinear")
         upsampled_flow = upsampled_flow.cpu().detach().numpy()
         orig_image = image[image_index].cpu().numpy()
 

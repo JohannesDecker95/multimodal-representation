@@ -1,9 +1,28 @@
 from __future__ import print_function
 import argparse
 import yaml
-
+import numpy as np
 from logger import Logger
 from trainers.selfsupervised import selfsupervised
+
+# import warnings
+# warnings.filterwarnings('error')
+# torch.set_printoptions(profile="default")
+
+import tensorboardX.x2num
+from tensorboardX.x2num import check_nan as original_check_nan
+# Monkey patching
+def check_nan_patched(array):
+    tmp = np.sum(array)
+    if np.isnan(tmp) or np.isinf(tmp):
+        raise ValueError('NaN or Inf found in input tensor.')
+    return array
+
+# Replace original function with patched version
+tensorboardX.x2num.check_nan = check_nan_patched
+
+# # Enable anomaly detection
+# torch.autograd.set_detect_anomaly(True)
 
 if __name__ == "__main__":
 

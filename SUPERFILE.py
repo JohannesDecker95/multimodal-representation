@@ -28,10 +28,9 @@ from torchvision import transforms
 from scipy.ndimage import zoom
 from torch.distributions import Normal
 
-import warnings
-warnings.filterwarnings('error')
-torch.set_printoptions(profile="default")
-
+# import warnings
+# warnings.filterwarnings('error')
+# torch.set_printoptions(profile="default")
 
 import tensorboardX.x2num
 from tensorboardX.x2num import check_nan as original_check_nan
@@ -45,8 +44,8 @@ def check_nan_patched(array):
 # Replace original function with patched version
 tensorboardX.x2num.check_nan = check_nan_patched
 
-# Enable anomaly detection
-torch.autograd.set_detect_anomaly(True)
+# # Enable anomaly detection
+# torch.autograd.set_detect_anomaly(True)
 
 class Logger(object):
     """
@@ -286,7 +285,7 @@ class SensorFusion(nn.Module):
         # print("frc_out: " + str(frc_out))
         # print("proprio_out: " + str(proprio_out))
 
-        print("self.deterministic: " + str(self.deterministic))
+        # print("self.deterministic: " + str(self.deterministic))
 
         if self.deterministic:
             # multimodal embedding
@@ -440,9 +439,9 @@ class SensorFusionSelfSupervised(SensorFusion):
         action_in,
     ):
 
-        print("self.encoder_bool: " + str(self.encoder_bool))
-        print("action_in: " + str(action_in))
-        print("self.deterministic: " + str(self.deterministic))
+        # print("self.encoder_bool: " + str(self.encoder_bool))
+        # print("action_in: " + str(action_in))
+        # print("self.deterministic: " + str(self.deterministic))
 
         if self.encoder_bool:
             # returning latent space representation if model is set in encoder mode
@@ -512,25 +511,6 @@ class SensorFusionSelfSupervised(SensorFusion):
                 var_prior,
                 self.z_depth
             )
-
-def remove_zeros(tensor):
-    """
-    This function takes a torch tensor as input and adds 1e-9 to each element of the tensor until it no longer contains
-    any zero values. The modified tensor is then returned.
-
-    Parameters:
-    tensor (torch.Tensor): The input tensor.
-
-    Returns:
-    tensor (torch.Tensor): The modified tensor with no zero values.
-    """
-    # Check if the tensor contains any zero values
-    while torch.any(tensor == 0):
-        # If it does, add 1e-9 to each element of the tensor
-        tensor += 1e-9
-
-    # Return the modified tensor
-    return tensor
 
 def detach_var(var):
     """Detaches a var from torch
@@ -1182,7 +1162,8 @@ class selfsupervised:
                 t_st = time.time()
                 self.optimizer.zero_grad()
 
-                print("sample_batched: " + str(sample_batched))
+                # print("sample_batched: " + str(sample_batched))
+
                 loss, mm_feat, results, image_packet = self.loss_calc(sample_batched)
                 # print("loss_1: " + str(loss)) # nan
                 # print("mm_feat :" + str(mm_feat)) # nan
@@ -1314,10 +1295,10 @@ class selfsupervised:
             self.device
         ).transpose(1, 3).transpose(2, 3)
 
-        print("unpaired_image: " + str(unpaired_image.size()) + str(unpaired_image))
-        print("unpaired_force: " + str(unpaired_force.size()) + str(unpaired_force))
-        print("unpaired_proprio: " + str(unpaired_proprio.size()) + str(unpaired_proprio))
-        print("unpaired_depth: " + str(unpaired_depth.size()) + str(unpaired_depth))
+        # print("unpaired_image: " + str(unpaired_image.size()) + str(unpaired_image))
+        # print("unpaired_force: " + str(unpaired_force.size()) + str(unpaired_force))
+        # print("unpaired_proprio: " + str(unpaired_proprio.size()) + str(unpaired_proprio))
+        # print("unpaired_depth: " + str(unpaired_depth.size()) + str(unpaired_depth))
 
 
         # labels to predict
@@ -1455,8 +1436,9 @@ class selfsupervised:
             results
         )
 
-        print("flow_loss.item(): " + str(flow_loss.item()))
-        print("global_cnt: " + str(global_cnt))
+        # print("flow_loss.item(): " + str(flow_loss.item()))
+        # print("global_cnt: " + str(global_cnt))
+
         self.logger.tb.add_scalar("loss/optical_flow", flow_loss.item(), global_cnt)
         self.logger.tb.add_scalar("loss/contact", contact_loss.item(), global_cnt)
         self.logger.tb.add_scalar("loss/is_paired", is_paired_loss.item(), global_cnt)
@@ -2014,9 +1996,9 @@ def sample_gaussian(m, v, device):
     epsilon = Normal(0, 1).sample(m.size())
     z = m + torch.sqrt(v) * epsilon.to(device)
 
-    print("m: " + str(m.size) + str(m))
-    print("v: " + str(v.size) + str(v))
-    print("epsilon: " + str(epsilon.size) + str(epsilon))
+    # print("m: " + str(m.size) + str(m))
+    # print("v: " + str(v.size) + str(v))
+    # print("epsilon: " + str(epsilon.size) + str(epsilon))
 
     return z
 
@@ -2035,9 +2017,9 @@ def product_of_experts(m_vect, v_vect):
     mu = (m_vect * T_vect).sum(2) * (1 / T_vect.sum(2))
     var = 1 / T_vect.sum(2)
 
-    print("T_vect: " + str(T_vect.size) + str(T_vect))
-    print("mu: " + str(mu.size) + str(mu))
-    print("var: " + str(var.size) + str(var))
+    # print("T_vect: " + str(T_vect.size) + str(T_vect))
+    # print("mu: " + str(mu.size) + str(mu))
+    # print("var: " + str(var.size) + str(var))
 
     return mu, var
 
@@ -2078,6 +2060,24 @@ def filter_depth(depth_image):
     )
     return torch.where(depth_image < 2, depth_image, torch.zeros_like(depth_image))
 
+def remove_zeros(tensor):
+    """
+    This function takes a torch tensor as input and adds 1e-9 to each element of the tensor until it no longer contains
+    any zero values. The modified tensor is then returned.
+
+    Parameters:
+    tensor (torch.Tensor): The input tensor.
+
+    Returns:
+    tensor (torch.Tensor): The modified tensor with no zero values.
+    """
+    # Check if the tensor contains any zero values
+    while torch.any(tensor == 0):
+        # If it does, add 1e-9 to each element of the tensor
+        tensor += 1e-9
+
+    # Return the modified tensor
+    return tensor
 
 
 if __name__ == "__main__":
@@ -2110,4 +2110,3 @@ if __name__ == "__main__":
     trainer = selfsupervised(configs, logger)
 
     trainer.train()
-    

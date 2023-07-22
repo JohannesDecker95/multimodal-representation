@@ -279,13 +279,15 @@ def EPE(input_flow, target_flow, device, sparse=False, mean=True):
 def realEPE(output, target, device, sparse=False):
     b, _, h, w = target.size()
 
-    upsampled_output = nn.functional.upsample(output, size=(h, w), mode="bilinear")
+    # upsampled_output = nn.functional.upsample(output, size=(h, w), mode="bilinear")
+    upsampled_output = nn.functional.interpolate(output, size=(h, w), mode="bilinear")
     return EPE(upsampled_output, target, device, sparse, mean=True)
 
 
 def realAAE(output, target, device, sparse=False):
     b, _, h, w = target.size()
-    upsampled_output = nn.functional.upsample(output, size=(h, w), mode="bilinear")
+    # upsampled_output = nn.functional.upsample(output, size=(h, w), mode="bilinear")
+    upsampled_output = nn.functional.interpolate(output, size=(h, w), mode="bilinear")
     return AAE(upsampled_output, target, device, sparse, mean=True)
 
 
