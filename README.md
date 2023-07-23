@@ -34,8 +34,10 @@ The distributed file structure and the `SUPERFILE.py` file contain exactly the s
 For both ways to execute the training process exists a configuration file in the `multimodal/configs/` directory. They are identical till the file paths that are specified in this files.\
 The model can be trained with various numbers of layers (depth) of the latent space by changing the `zdepth` parameter in the config file. The default depth of the latent space is 2.
 
-## activate conda environment
+## conda environment
 `conda activate envname`
+
+To turn back to your normal (base) environment: `conda deactiave`
 
 ## get dataset
 ```
