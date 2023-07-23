@@ -17,7 +17,7 @@ To get this repo up and running conda-forge/miniforge package management was use
 
 The packages and their versions listed in `requirements.txt` have been updated manually to their newest version to execute the training process on macOS with apple silicon arm chip (what is my working device).
 
-All the finally used packages are listed in the `2_environment.yml`. After conda was set up successfully, this file can be used to recreate the conda environment for the execution of the training process.\
+All the finally used packages are listed in the `2_environment.yml`. After conda was set up successfully, this file can be used to recreate the conda environment for the execution of the training process.
 
 `conda env create --name envname --file=2_environment.yml`
 
@@ -82,4 +82,4 @@ image                    Dataset {50, 128, 128, 3}\
 joint_pos                Dataset {50, 7}\
 joint_vel                Dataset {50, 7}\
 optical_flow             Dataset {50, 128, 128, 2}\
-proprio                  Dataset {50, 8}\
+proprio                  Dataset {50, 8}
