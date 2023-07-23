@@ -54,11 +54,11 @@ OR
 `python SUPERFILE.py --config multimodal/configs/SUPERFILE_training_default.yaml`
 
 ## visualisation of results
-To see how good the trained modle performs, comapred to models with different numbers of layers of the their latent space, the `Tensorboard` package was used.\
+To see how good the trained modle performs, comapred to models with different numbers of layers of the their latent space, the `Tensorboard` package was used.
 
 `tensorboard --logdir logging` or `tensorboard --logdir multimodal/logging/`
 
-Then you can find the results under `http://localhost:6006/`
+Then you can find the results at `http://localhost:6006/`
 
 ## OPTIONAL: Check System settings for number of allowed open files
 `launchctl limit maxfiles` 
@@ -74,7 +74,6 @@ outputs: maxfiles    SOFTLIMIT       HARDLIMIT
 `ulimit -n`
 
 ## ROBOT DATASET
-----
 action                   Dataset {50, 4}\
 contact                  Dataset {50, 50}\
 depth_data               Dataset {50, 128, 128, 1}\
