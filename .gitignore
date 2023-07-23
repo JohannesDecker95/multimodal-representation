@@ -1,6 +1,10 @@
 /multimodal/dataset/triangle_real_data
 
-/multimodal/logging/202307230906_/models/EXCLUDED
+/multimodal/logging/6__202307090153_
+/multimodal/logging/8__202307081659_
+/multimodal/logging/4__202307072206_
+/multimodal/logging/2__202307051839_
+/multimodal/logging/O__202306081337_
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
