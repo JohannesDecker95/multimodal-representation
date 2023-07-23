@@ -69,7 +69,7 @@ outputs: maxfiles    SOFTLIMIT       HARDLIMIT
 ## ROBOT DATASET
 ----
 action                   Dataset {50, 4}\
-contact                  Dataset {50, 50}\ 
+contact                  Dataset {50, 50}\
 depth_data               Dataset {50, 128, 128, 1}\
 ee_forces_continuous     Dataset {50, 50, 6}\
 ee_ori                   Dataset {50, 4}\
