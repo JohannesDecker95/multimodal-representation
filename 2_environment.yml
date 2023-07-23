@@ -307,4 +307,3 @@ dependencies:
       - torch-tb-profiler==0.4.1
       - torchsummary==1.5.1
       - zope-interface==6.0
-prefix: /Users/johannesdecker/miniforge3/envs/multi

@@ -27,7 +27,7 @@ max_epoch: 50
 batch_size: 64
 ep_length: 50
 zdim: 128
-zdepth: 10 #8 6 4 2
+zdepth: 2
 action_dim: 4
 
 # Dataset params
@@ -36,11 +36,11 @@ dataset_params:
   action_dim: 4
 
 load: ''
-logging_folder: logging/ # multimodal/logging/
+logging_folder: logging/
 
 
 # path to dataset hdf5 file'
-dataset: "dataset/triangle_real_data/" # "multimodal/dataset/triangle_real_data/"
+dataset: "dataset/triangle_real_data/"
 
 val_ratio: 0.20
 cuda: True

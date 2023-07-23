@@ -17,13 +17,22 @@ To get this repo up and running conda-forge/miniforge package management was use
 
 The packages and their versions listed in `requirements.txt` have been updated manually to their newest version to execute the training process on macOS with apple silicon arm chip (what is my working device).
 
-All the finally used packages are listed in the `environment.yml`. After conda was set up successfully, this file can be used to recreate the conda environment for the execution of the training process.\
+All the finally used packages are listed in the `2_environment.yml`. After conda was set up successfully, this file can be used to recreate the conda environment for the execution of the training process.\
 
-`conda env create --name envname --file=environment.yml`
+`conda env create --name envname --file=2_environment.yml`
 
 (Replace envname with the name you want to give the conda environment)
 
-Mayby the used packages in the `environment.yml` have to be adjusted, if you want to execute the training process on other systems/chips as Windows, Linux, x64 and x86.
+Mayby the used packages in the `2_environment.yml` have to be adjusted, if you want to execute the training process on other systems/chips as Windows, Linux, x64 and x86.
+
+## structure of repo
+The repo provides two different ways to execute the training process:\
+1. Via the distributed file structer with `mini_main.py` as main file, what is basically the original adjusted repository\
+2. Via the `SUPERFILE.py` file, it contains all the relevant code for the training process of the modell in one single file\\
+
+The distributed file structer and the `SUPERFILE.py` file contain exactly the same code. The `SUPERFILE.py` file was created only for the purpose to adjust and extend the repository to be able to define and train the modle with various numbers of layers (depth) of the latent space.\
+For both ways to execute the training process exists a configuration file in the `multimodal/configs/` directory. They are identical till the filepaths that are specified in this files.\
+The model can be trained with various numbers of layers (depth) of the latent space by changing the `zdepth` parameter in the config file. The default depth of the latent space is 2.
 
 ## activate conda environment
 `conda activate envname`
@@ -37,7 +46,12 @@ cd multimodal/dataset
 `cd ..`
 
 ## run training
-`python mini_main.py --config configs/training_default.yaml`
+`python mini_main.py --config configs/training_default.yaml`\
+
+OR\
+
+`cd ..`\
+`python SUPERFILE.py --config multimodal/configs/SUPERFILE_training_default.yaml`
 
 ## OPTIONAL: Check System settings for number of allowed open files
 `launchctl limit maxfiles` \
