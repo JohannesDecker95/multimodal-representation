@@ -23,15 +23,15 @@ All the finally used packages are listed in the `2_environment.yml`. After conda
 
 (Replace envname with the name you want to give the conda environment)
 
-Mayby the used packages in the `2_environment.yml` have to be adjusted, if you want to execute the training process on other systems/chips as Windows, Linux, x64 and x86.
+Maybe the used packages in the `2_environment.yml` must be adjusted, if you want to execute the training process on other systems/chips as Windows, Linux, x64 and x86.
 
 ## structure of the repo
 The repo provides two different ways to execute the training process:
-1. Via the distributed file structer with `mini_main.py` as main file, what is basically the original adjusted repository
-2. Via the `SUPERFILE.py` file, it contains all the relevant code for the training process of the modell in one single file
+1. Via the distributed file structure with `mini_main.py` as main file, what is basically the original adjusted repository
+2. Via the `SUPERFILE.py` file, it contains all the relevant code for the training process of the model in one single file
 
-The distributed file structer and the `SUPERFILE.py` file contain exactly the same code. The `SUPERFILE.py` file was created only for the purpose to adjust and extend the repository to be able to define and train the modle with various numbers of layers (depth) of the latent space.\
-For both ways to execute the training process exists a configuration file in the `multimodal/configs/` directory. They are identical till the filepaths that are specified in this files.\
+The distributed file structure and the `SUPERFILE.py` file contain exactly the same code. The `SUPERFILE.py` file was created only for the purpose to adjust and extend the repository to be able to define and train the model with various numbers of layers (depth) of the latent space.\
+For both ways to execute the training process exists a configuration file in the `multimodal/configs/` directory. They are identical till the file paths that are specified in this files.\
 The model can be trained with various numbers of layers (depth) of the latent space by changing the `zdepth` parameter in the config file. The default depth of the latent space is 2.
 
 ## activate conda environment
@@ -53,8 +53,8 @@ OR
 `cd ..`\
 `python SUPERFILE.py --config multimodal/configs/SUPERFILE_training_default.yaml`
 
-## visualisation of results
-To see how good the trained modle performs, comapred to models with different numbers of layers of the their latent space, the `Tensorboard` package was used.
+## visualization of results
+To see how good the trained model performs, compared to models with different numbers of layers of the latent space, the `Tensorboard` package was used.
 
 `tensorboard --logdir logging` or `tensorboard --logdir multimodal/logging/`
 
@@ -66,11 +66,11 @@ Then you can find the results at `http://localhost:6006/`
 outputs: maxfiles    SOFTLIMIT       HARDLIMIT
 
 ## OPTIONAL: IF first execution of the training process failed because of "OSError: [Errno 24] Too many open files"
---> Set systems softlimit to hardlimit (influences the limit for the current shell session only)
+--> Set systems soft limit to hard limit (influences the limit for the current shell session only)
 
 `ulimit -n 'ulimit -Hn'`
 
-## To check if it worked, use the follwoing command:
+## To check if it worked, use the following command:
 `ulimit -n`
 
 ## ROBOT DATASET
