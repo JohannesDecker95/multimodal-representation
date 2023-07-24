@@ -37,7 +37,7 @@ The model can be trained with various numbers of layers (depth) of the latent sp
 ## conda environment
 `conda activate envname`
 
-To turn back to your normal (base) environment: `conda deactiave`
+To turn back to your normal (base) environment: `conda deactivate`
 
 ## get dataset
 ```
